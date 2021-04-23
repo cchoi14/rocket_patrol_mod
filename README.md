@@ -1,2 +1,2 @@
-# rocket_patrol_mod
-a mod for the game Rocket Patrol
+# rocket_patrol
+(tutorial for CMPM120) Recreates the game Rocket Patrol in Phaser 3
