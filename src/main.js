@@ -16,3 +16,6 @@ let borderPadding = borderUISize / 3;
 
 // declare pointer
 let mouse;
+
+// track highscore
+let highscore = 0;
