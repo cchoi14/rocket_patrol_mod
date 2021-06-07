@@ -6,8 +6,8 @@ class Play extends Phaser.Scene {
     preload() {
         // load images/tile sprites
         this.load.image('rocket', './assets/rocket.png');
-        this.load.image('spaceship', './assets/spaceship.png');
         this.load.image('starfield', './assets/starfield.png');
+        this.load.image('red_dot', './assets/red_dot.png');
 
         // load spritesheet
         this.load.spritesheet('explosion', './assets/explosion.png', {
@@ -25,6 +25,9 @@ class Play extends Phaser.Scene {
     }
 
     create() {
+        // bind mouse to pointer
+        mouse = this.input.activePointer;
+
         // place tile sprite
         this.starfield = this.add.tileSprite(0, 0, 640, 480, 'starfield').setOrigin(0, 0);
 
@@ -37,7 +40,8 @@ class Play extends Phaser.Scene {
         this.add.rectangle(game.config.width - borderUISize, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0, 0);
 
         // add rocket (p1)
-        this.p1Rocket = new Rocket(this, game.config.width / 2, game.config.height - borderUISize - borderPadding, 'rocket').setOrigin(0.5, 0);
+        this.p1Rocket = new Rocket(this, mouse.x, game.config.height - borderUISize - borderPadding, 'rocket');
+        // update rocket sprite
 
         // add spaceships (x3)
         this.ship01 = new Spaceship(this, game.config.width + borderUISize * 6, borderUISize * 4, 'spaceship', 0, 30).setOrigin(0, 0);
@@ -56,63 +60,71 @@ class Play extends Phaser.Scene {
         });
         this.anims.create({
             key: 'laser',
-            frames: this.anims.generateFrameNumbers('laser_sprite', { start: 0, end: 19, first: 0}),
+            frames: this.anims.generateFrameNumbers('laser_sprite', { start: 0, end: 19, first: 0 }),
             frameRate: 10
         });
 
         // initialize score and time
         this.p1Score = 0;
-        this.p1Time = 60000;
+        this.p1Time = 60;
 
         // GAME OVER flag
         this.gameOver = false;
 
-        
+
         let textConfig = {
             fontFamily: 'Eight Bit Dragon',
             fontSize: '30px',
             backgroundColor: '#F3B141',
             color: '#FFFFFF',
-            align: 'right',
+            align: 'left',
             padding: {
                 top: 5,
                 bottom: 5
             },
             fixedWidth: 200
-        }        
+        }
         // display score,  highscore, time
         this.scoreDisplay = this.add.text(borderUISize + borderPadding, borderUISize + borderPadding * 2, 'Score: ' + this.p1Score, textConfig);
         this.highscoreDisplay = this.add.text(borderUISize + borderPadding + 210, borderUISize + borderPadding * 2, 'Hiscore: ' + highscore, textConfig);
-        this.timeDisplay = this.add.text(borderUISize + borderPadding + 420, borderUISize + borderPadding * 2, 'Time: ' + this.p1Time / 1000, textConfig);
+        this.timeDisplay = this.add.text(borderUISize + borderPadding + 420, borderUISize + borderPadding * 2, 'Time: ' + this.p1Time, textConfig);
 
         // 60-second play clock
-        textConfig.fixedWidth = 0;
-        this.clock = this.time.delayedCall(60000, () => {
-            this.add.text(game.config.width / 2, game.config.height / 2, 'GAME OVER', textConfig).setOrigin(0.5);
-            this.add.text(game.config.width / 2, game.config.height / 2 + 64, 'Press (R) to Restart or ← for Menu', textConfig).setOrigin(0.5);
-            this.gameOver = true;
-        }, null, this);
+        countdown = this.time.addEvent({
+            delay: 1000,
+            callback: this.countdownTick,
+            callbackScope: this,
+            loop: true
+        });
+
+        particles = this.add.particles('red_dot');
+        emitter = particles.createEmitter( {
+            speed: { min: 5, max: 50 },
+            quantity: { min: 60, max: 100 },
+            lifespan: 1000,
+            on: false
+        });
     }
 
     update() {
         // check key input for restart
         if (this.gameOver && Phaser.Input.Keyboard.JustDown(keyR)) {
             this.scene.restart();
-            this.checkHighscore(p1Score);
+            this.checkHighscore(this.p1Score);
         }
 
         if (this.gameOver && Phaser.Input.Keyboard.JustDown(keyT)) {
             this.scene.start("menuScene");
-            this.checkHighscore(p1Score);
+            this.checkHighscore(this.p1Score);
         }
 
         this.starfield.tilePositionX -= 4;
 
         if (!this.gameOver) {
-            this.p1Rocket.update();         // update rocket sprite
             this.ship01.update();           // update spaceships (x3)
             this.ship02.update();
             this.ship03.update();
+            this.p1Rocket.update();
         }
 
         // check collisions
@@ -142,19 +154,12 @@ class Play extends Phaser.Scene {
         }
     }
 
-    checkLaserActive(rocket, ship, laser) {
-        if ( this.checkCollision(rocket,ship) && laser.isFiring() ) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     shipExplode(ship) {
         // temporarily hide ship
         ship.alpha = 0;
         // create explosion sprite at ship's position
         let boom = this.add.sprite(ship.x, ship.y, 'explosion').setOrigin(0, 0);
+        particles.emitParticleAt(ship.x, ship.y);
         boom.anims.play('explode');             // play explode animation
         boom.on('animationcomplete', () => {    // callback after anim completes
             ship.reset();                         // reset ship position
@@ -162,7 +167,9 @@ class Play extends Phaser.Scene {
             boom.destroy();                       // remove explosion sprite
             // score add and repaint
             this.p1Score += ship.points;
-            this.scoreLeft.text = this.p1Score;
+            this.p1Time += ship.points / 10;
+            this.scoreDisplay.text = 'Score: ' + this.p1Score;
+            this.timeDisplay.text = 'Time: ' + this.p1Time;
             this.sound.play('sfx_explosion');
         });
     }
@@ -170,6 +177,17 @@ class Play extends Phaser.Scene {
     checkHighscore(score) {
         if (score > highscore) {
             highscore = score;
+        }
+    }
+
+    countdownTick() {
+        this.p1Time -= 1;
+        this.timeDisplay.text = 'Time: ' + this.p1Time;
+        if (this.p1Time <= 0) {
+            this.add.text(game.config.width / 2, game.config.height / 2, 'GAME OVER', textConfig).setOrigin(0.5);
+            this.add.text(game.config.width / 2, game.config.height / 2 + 64, 'Press (R) to Restart\nor (T) to exit to title', textConfig).setOrigin(0.5);
+            this.gameOver = true;
+            countdown.paused = true;
         }
     }
 }
