@@ -16,6 +16,12 @@ class Play extends Phaser.Scene {
             startFrame: 0,
             endFrame: 9
         });
+        this.load.spritesheet('laser_sprite', './assets/laser.png', {
+            frameWidth: 50,
+            frameHeight: 32,
+            startFrame: 0,
+            endFrame: 19
+        });
     }
 
     create() {
@@ -39,10 +45,7 @@ class Play extends Phaser.Scene {
         this.ship03 = new Spaceship(this, game.config.width, borderUISize * 6 + borderPadding * 4, 'spaceship', 0, 10).setOrigin(0, 0);
 
         // define keys
-        keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
         keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-        keyLEFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
-        keyRIGHT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
 
         // animation config
         this.anims.create({
@@ -50,27 +53,48 @@ class Play extends Phaser.Scene {
             frames: this.anims.generateFrameNumbers('explosion', { start: 0, end: 9, first: 0 }),
             frameRate: 30
         });
+        this.anims.create({
+            key: 'laser',
+            frames: this.anims.generateFrameNumbers('laser_sprite', { start: 0, end: 19, first: 0}),
+            frameRate: 10
+        });
 
-        // initialize score
+        // initialize score and time
         this.p1Score = 0;
+        this.p1Time = 60000;
+
+        // GAME OVER flag
+        this.gameOver = false;
 
         // display score
         let scoreConfig = {
-            fontFamily: 'Courier',
-            fontSize: '28px',
+            fontFamily: 'Eight Bit Dragon',
+            fontSize: '30px',
             backgroundColor: '#F3B141',
-            color: '#843605',
+            color: '#FFFFFF',
             align: 'right',
             padding: {
                 top: 5,
-                bottom: 5,
+                bottom: 5
             },
             fixedWidth: 100
         }
         this.scoreLeft = this.add.text(borderUISize + borderPadding, borderUISize + borderPadding * 2, this.p1Score, scoreConfig);
 
-        // GAME OVER flag
-        this.gameOver = false;
+        // display time
+        let timeConfig = {
+            fontFamily: 'Eight Bit Dragon',
+            fontSize: '30px',
+            backgroundColor: '#F3B141',
+            color: '#FFFFFF',
+            align: 'right',
+            padding: {
+                top: 5,
+                bottom: 5
+            },
+            fixedWidth: 100
+        }
+        this.timeDisplay = this.add.text(game.config.width - borderUISize - borderPadding, borderUISize + borderPadding * 2, this.p1Time, timeConfig);
 
         // 60-second play clock
         scoreConfig.fixedWidth = 0;
