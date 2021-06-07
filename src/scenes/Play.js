@@ -46,6 +46,7 @@ class Play extends Phaser.Scene {
 
         // define keys
         keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+        keyT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
 
         // animation config
         this.anims.create({
@@ -111,7 +112,7 @@ class Play extends Phaser.Scene {
             this.scene.restart();
         }
 
-        if (this.gameOver && Phaser.Input.Keyboard.JustDown(keyLEFT)) {
+        if (this.gameOver && Phaser.Input.Keyboard.JustDown(keyT)) {
             this.scene.start("menuScene");
         }
 
@@ -145,6 +146,14 @@ class Play extends Phaser.Scene {
             rocket.x + rocket.width > ship.x &&
             rocket.y < ship.y + ship.height &&
             rocket.height + rocket.y > ship.y) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    checkLaserActive(rocket, ship, laser) {
+        if ( this.checkCollision(rocket,ship) && laser.isFiring() ) {
             return true;
         } else {
             return false;
