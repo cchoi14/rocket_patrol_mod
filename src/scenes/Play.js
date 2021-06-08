@@ -207,8 +207,30 @@ class Play extends Phaser.Scene {
         this.p1Time -= 1;
         this.timeDisplay.text = 'Time: ' + this.p1Time;
         if (this.p1Time <= 0) {
-            this.add.text(game.config.width / 2, game.config.height / 2, 'GAME OVER', textConfig).setOrigin(0.5);
-            this.add.text(game.config.width / 2, game.config.height / 2 + 64, 'Press (R) to Restart\nor (T) to exit to title', textConfig).setOrigin(0.5);
+            this.add.text(game.config.width / 2, game.config.height / 2, 'GAME OVER', {
+                fontFamily: 'Eight Bit Dragon',
+                fontSize: '30px',
+                backgroundColor: '#F3B141',
+                color: '#FFFFFF',
+                align: 'left',
+                padding: {
+                    top: 5,
+                    bottom: 5
+                },
+                fixedWidth: 200
+            }).setOrigin(0.5);
+            this.add.text(game.config.width / 2, game.config.height / 2 + 64, 'Press (R) to Restart\nor (T) to exit to title', {
+                fontFamily: 'Eight Bit Dragon',
+                fontSize: '30px',
+                backgroundColor: '#F3B141',
+                color: '#FFFFFF',
+                align: 'left',
+                padding: {
+                    top: 5,
+                    bottom: 5
+                },
+                fixedWidth: 200
+            }).setOrigin(0.5);
             this.gameOver = true;
             countdown.paused = true;
             clock.paused = true;
