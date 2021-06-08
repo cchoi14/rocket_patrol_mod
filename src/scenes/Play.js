@@ -8,6 +8,7 @@ class Play extends Phaser.Scene {
         this.load.image('rocket', './assets/rocket.png');
         this.load.image('starfield', './assets/starfield.png');
         this.load.image('red_dot', './assets/red_dot.png');
+        this.load.audio('pogs', './assets/komiku_battleOfPogs.mp3');
 
         // load spritesheet
         this.load.spritesheet('explosion', './assets/explosion.png', {
@@ -25,6 +26,11 @@ class Play extends Phaser.Scene {
     }
 
     create() {
+        if (this.bgm == undefined) //prevent duplication
+        {
+            this.bgm = this.sound.add('pogs');
+        }
+
         // bind mouse to pointer
         mouse = this.input.activePointer;
 
@@ -47,6 +53,9 @@ class Play extends Phaser.Scene {
         this.ship01 = new Spaceship(this, game.config.width + borderUISize * 6, borderUISize * 4, 'spaceship', 0, 30).setOrigin(0, 0);
         this.ship02 = new Spaceship(this, game.config.width + borderUISize * 3, borderUISize * 5 + borderPadding * 2, 'spaceship', 0, 20).setOrigin(0, 0);
         this.ship03 = new Spaceship(this, game.config.width, borderUISize * 6 + borderPadding * 4, 'spaceship', 0, 10).setOrigin(0, 0);
+        this.ship01.setSpeed(4);
+        this.ship02.setSpeed(4);
+        this.ship03.setSpeed(4);
 
         // define keys
         keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
@@ -97,8 +106,17 @@ class Play extends Phaser.Scene {
             loop: true
         });
 
+        // speed ships up after every 30 seconds
+        clock = this.time.addEvent({
+            delay: 30000,
+            callback: this.speedUp,
+            callbackScope: this,
+            loop: true
+        });
+
+        // create particle emitter
         particles = this.add.particles('red_dot');
-        emitter = particles.createEmitter( {
+        emitter = particles.createEmitter({
             speed: { min: 5, max: 50 },
             quantity: { min: 60, max: 100 },
             lifespan: 1000,
@@ -107,6 +125,10 @@ class Play extends Phaser.Scene {
     }
 
     update() {
+        if (!this.bgm.isPlaying) {
+            this.bgm.play();
+        }
+
         // check key input for restart
         if (this.gameOver && Phaser.Input.Keyboard.JustDown(keyR)) {
             this.scene.restart();
@@ -116,6 +138,7 @@ class Play extends Phaser.Scene {
         if (this.gameOver && Phaser.Input.Keyboard.JustDown(keyT)) {
             this.scene.start("menuScene");
             this.checkHighscore(this.p1Score);
+            this.bgm.stop;
         }
 
         this.starfield.tilePositionX -= 4;
@@ -188,6 +211,13 @@ class Play extends Phaser.Scene {
             this.add.text(game.config.width / 2, game.config.height / 2 + 64, 'Press (R) to Restart\nor (T) to exit to title', textConfig).setOrigin(0.5);
             this.gameOver = true;
             countdown.paused = true;
+            clock.paused = true;
         }
+    }
+
+    speedUp() {
+        this.ship01.addSpeed(2);
+        this.ship02.addSpeed(2);
+        this.ship03.addSpeed(2);
     }
 }
